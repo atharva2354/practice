@@ -1,0 +1,30 @@
+import pandas as pd
+import numpy as np
+from gensim.models import Word2Vec
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Load dataset
+df = pd.read_csv('Twitter.csv')
+
+# Preprocessing
+X = df['Text'].dropna().str.lower().str.split()
+
+# Train CBOW model
+model = Word2Vec(X, vector_size=50, window=5,
+                 min_count=1, sg=0, epochs=10)
+
+# Document embeddings
+vectors = np.array([
+    np.mean([model.wv[w] for w in words], axis=0)
+    for words in X
+])
+
+# User input
+query = input("Enter search text: ").lower().split()
+
+# Input embedding
+q = np.mean([model.wv[w] for w in query if w in model.wv], axis=0)
+
+# Find similar documents
+scores = cosine_similarity([q], vectors)[0]
+print(df.loc[X.index[np.argsort(scores)[-3:][::-1]], 'Text'])

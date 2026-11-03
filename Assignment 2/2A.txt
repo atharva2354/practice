@@ -1,0 +1,55 @@
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+
+# 1. Load dataset
+data = pd.read_csv("cifar10.csv")
+
+# 2. Separate features and labels
+X = data.drop("label", axis=1).values
+y = data["label"].values
+
+# 3. Split dataset
+x_train, x_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 4. Normalize images
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# 5. Reshape images
+x_train = x_train.reshape(-1, 32, 32, 3)
+x_test = x_test.reshape(-1, 32, 32, 3)
+
+# 6. Create CNN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu',
+                           input_shape=(32,32,3)),
+    tf.keras.layers.MaxPooling2D((2,2)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+# 7. Compile model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# 8. Train model
+history = model.fit(x_train, y_train, epochs=5)
+
+# 9. Evaluate model
+loss, accuracy = model.evaluate(x_test, y_test)
+print("Test Accuracy:", accuracy)
+
+# 10. Plot loss and accuracy
+plt.plot(history.history['loss'], label='Loss')
+plt.plot(history.history['accuracy'], label='Accuracy')
+plt.legend()
+plt.show()

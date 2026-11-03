@@ -1,0 +1,18 @@
+import pandas as pd
+from gensim.models import Word2Vec
+
+# Load dataset
+df = pd.read_csv('Twitter.csv')
+
+# Preprocessing
+X = df['Text'].dropna().str.lower().str.split()
+
+# Train CBOW model
+model = Word2Vec(X, vector_size=50, window=5,
+                 min_count=1, sg=0, epochs=10)
+
+# Evaluate using similar words
+print(model.wv.most_similar(X.iloc[0][0]))
+
+# Display word embedding
+print(model.wv[X.iloc[0][0]])

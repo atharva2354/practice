@@ -1,0 +1,71 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# Load dataset
+path = r'D:\Downloads\LP IV Updated Datasets\LP IV Updated Datasets\Fashion MNIST'
+
+data = tf.keras.preprocessing.image.ImageDataGenerator(
+    rescale=1./255, validation_split=0.2
+)
+
+train = data.flow_from_directory(
+    path, target_size=(128,128), batch_size=32,
+    class_mode='categorical', subset='training',
+    color_mode='rgb'
+)
+
+test = data.flow_from_directory(
+    path, target_size=(128,128), batch_size=32,
+    class_mode='categorical', subset='validation',
+    color_mode='rgb'
+)
+
+# Load pretrained model
+base = tf.keras.applications.VGG16(
+    weights='imagenet', include_top=False,
+    input_shape=(128,128,3)
+)
+
+base.trainable = False
+
+# Build model
+model = tf.keras.Sequential([
+    tf.keras.layers.Lambda(
+        lambda x: tf.keras.applications.vgg16.preprocess_input(x * 255)
+    ),
+    base,
+    tf.keras.layers.GlobalAveragePooling2D(),
+    tf.keras.layers.Dense(train.num_classes, activation='softmax')
+])
+
+# Compile
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train
+history = model.fit(train, epochs=5)
+
+# Evaluate
+model.evaluate(test)
+
+# Visualize prediction
+x, y = next(test)
+pred = model.predict(x[:1])
+
+plt.imshow(x[0])
+plt.title(list(train.class_indices.keys())[pred.argmax()])
+plt.axis('off')
+plt.show()
+
+# Fine tuning
+base.trainable = True
+
+for layer in base.layers[:-4]:
+    layer.trainable = False
+
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+model.fit(train, epochs=2)

@@ -1,0 +1,41 @@
+import pandas as pd
+import tensorflow as tf
+import numpy as np
+
+# Load dataset
+df = pd.read_csv('engine.csv')
+
+# Preprocessing
+X = df.select_dtypes(include='number').fillna(0).values
+
+X = X.reshape(X.shape[0], 1, X.shape[1])
+
+# Build autoencoder
+model = tf.keras.Sequential([
+    tf.keras.layers.LSTM(16, input_shape=(1, X.shape[2])),
+    tf.keras.layers.RepeatVector(1),
+    tf.keras.layers.LSTM(16, return_sequences=True),
+    tf.keras.layers.TimeDistributed(
+        tf.keras.layers.Dense(X.shape[2])
+    )
+])
+
+# Compile
+model.compile(optimizer='adam', loss='mse')
+
+# Train
+model.fit(X, X, epochs=5)
+
+# Evaluate
+model.evaluate(X, X)
+
+# Calculate threshold
+pred = model.predict(X)
+error = np.mean((X - pred)**2, axis=(1,2))
+threshold = np.percentile(error, 95)
+
+# Detect faults
+faults = error > threshold
+
+print("Threshold:", threshold)
+print("Faults detected:", np.sum(faults))

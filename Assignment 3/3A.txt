@@ -1,0 +1,41 @@
+import pandas as pd
+import tensorflow as tf
+import numpy as np
+
+# Load dataset
+df = pd.read_csv('creditcard.csv')
+
+# Preprocessing
+X = df.drop('Class', axis=1).values
+
+# Select normal transactions
+normal = X[df['Class'] == 0]
+
+# Build autoencoder
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(16, activation='relu', input_shape=(X.shape[1],)),
+    tf.keras.layers.Dense(8, activation='relu'),
+    tf.keras.layers.Dense(16, activation='relu'),
+    tf.keras.layers.Dense(X.shape[1])
+])
+
+# Compile
+model.compile(optimizer='adam', loss='mse')
+
+# Train
+model.fit(normal, normal, epochs=5, batch_size=256)
+
+# Calculate threshold
+pred = model.predict(normal)
+error = np.mean((normal - pred)**2, axis=1)
+threshold = np.percentile(error, 95)
+
+# Detect fraud
+pred = model.predict(X)
+error = np.mean((X - pred)**2, axis=1)
+
+fraud = error > threshold
+
+print("Threshold:", threshold)
+print("Fraud detected:", np.sum(fraud))
+print("Reconstruction error:", error[:5])

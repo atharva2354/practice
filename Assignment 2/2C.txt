@@ -1,0 +1,60 @@
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# Load datasets
+train = pd.read_csv(r"sign_mnist_train.csv")
+test = pd.read_csv(r"sign_mnist_test.csv")
+
+# Separate features and labels
+x_train = train.drop('label', axis=1).values
+y_train = train['label'].values
+
+x_test = test.drop('label', axis=1).values
+y_test = test['label'].values
+
+# Normalize data
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# Reshape data
+x_train = x_train.reshape(-1, 28, 28, 1)
+x_test = x_test.reshape(-1, 28, 28, 1)
+
+# Build CNN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Conv2D(32, (3,3), activation='relu',
+                           input_shape=(28,28,1)),
+    tf.keras.layers.MaxPooling2D((2,2)),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(25, activation='softmax')
+])
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train model
+history = model.fit(x_train, y_train, epochs=5)
+
+# Evaluate model
+loss, accuracy = model.evaluate(x_test, y_test)
+print("Test Accuracy:", accuracy)
+
+# Plot accuracy
+plt.plot(history.history['accuracy'])
+plt.title('Model Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.show()
+
+# Plot loss
+plt.plot(history.history['loss'])
+plt.title('Model Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.show()

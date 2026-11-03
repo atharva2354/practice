@@ -1,0 +1,46 @@
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# 1. Load CSV files
+train = pd.read_csv("mnist_train.csv")
+test = pd.read_csv("mnist_test.csv")
+
+# 2. Separate features and labels
+x_train = train.drop("label", axis=1)
+y_train = train["label"]
+
+x_test = test.drop("label", axis=1)
+y_test = test["label"]
+
+# 3. Normalize data
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# 4. Create FNN model
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(784,)),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10, activation='softmax')
+])
+
+# 5. Compile model
+model.compile(
+    optimizer='sgd',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# 6. Train model
+history = model.fit(x_train, y_train, epochs=11)
+
+# 7. Evaluate model
+loss, accuracy = model.evaluate(x_test, y_test)
+
+print("Test Accuracy:", accuracy)
+
+# 8. Plot loss and accuracy
+plt.plot(history.history['loss'], label='Loss')
+plt.plot(history.history['accuracy'], label='Accuracy')
+plt.legend()
+plt.show()

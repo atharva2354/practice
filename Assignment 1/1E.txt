@@ -1,0 +1,26 @@
+train=pd.read_csv(r"C:\Users\rauta\Downloads\LP IV Updated Datasets\LP IV Updated Datasets\FNN and CNN\Sign Language MNIST\sign_mnist_train.csv")
+test=pd.read_csv(r"C:\Users\rauta\Downloads\LP IV Updated Datasets\LP IV Updated Datasets\FNN and CNN\Sign Language MNIST\sign_mnist_test.csv")
+x_train=train.drop('label',axis=1).values
+y_train=train['label'].values
+x_test=test.drop('label',axis=1).values
+y_test=test['label'].values
+x_train=x_train/255.0
+x_test=x_test/255.0
+model=tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(784,)), 
+    tf.keras.layers.Dense(128,activation='relu'), 
+    tf.keras.layers.Dense(25,activation='softmax')
+])
+model.compile(
+    optimizer='sgd', 
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+history=model.fit(x_train,y_train,epochs=5)
+loss,accuracy=model.evaluate(x_test,y_test) 
+print("Test Accuracy:", accuracy)
+
+plt.plot(history.history['loss'], label='Loss')
+plt.plot(history.history['accuracy'], label='Accuracy')
+plt.legend()
+plt.show()

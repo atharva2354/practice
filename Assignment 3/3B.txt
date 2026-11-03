@@ -1,0 +1,37 @@
+import tensorflow as tf
+import numpy as np
+
+# Load images into x_train and x_test
+# Resize to 64x64 and normalize to 0-1
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(64, 64, 3)),
+    tf.keras.layers.Conv2D(16, 3, activation='relu', padding='same'),
+    tf.keras.layers.MaxPooling2D(2),
+    tf.keras.layers.Conv2D(3, 3, activation='relu', padding='same'),
+    tf.keras.layers.UpSampling2D(2),
+    tf.keras.layers.Conv2D(3, 3, activation='sigmoid', padding='same')
+])
+
+# Compile
+model.compile(optimizer='adam', loss='mse')
+
+# Train
+model.fit(x_train, x_train, epochs=5)
+
+# Evaluate
+model.evaluate(x_test, x_test)
+
+# Calculate threshold
+pred = model.predict(x_train)
+error = np.mean((x_train - pred)**2, axis=(1,2,3))
+threshold = np.percentile(error, 95)
+
+# Detect anomalies
+pred = model.predict(x_test)
+error = np.mean((x_test - pred)**2, axis=(1,2,3))
+
+anomalies = error > threshold
+
+print("Threshold:", threshold)
+print("Anomalies:", np.sum(anomalies))

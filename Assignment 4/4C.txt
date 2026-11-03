@@ -1,0 +1,28 @@
+from gensim.models import Word2Vec
+
+# Load document
+with open('document3.txt', 'r') as f:
+    text = f.read()
+
+# Preprocessing
+sentences = [s.lower().split() for s in text.split('.') if s.strip()]
+
+# Train CBOW model
+model = Word2Vec(
+    sentences,
+    vector_size=50,
+    window=5,
+    min_count=1,
+    sg=0,
+    epochs=10
+)
+
+# Find similar words
+word = 'influenza'
+print("Similar words:", model.wv.most_similar(word))
+
+# Display word embedding
+print("Word Embedding:", model.wv[word])
+
+# Vocabulary size
+print("Vocabulary Size:", len(model.wv))

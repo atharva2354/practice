@@ -1,0 +1,42 @@
+import pandas as pd
+import tensorflow as tf
+import numpy as np
+
+# Load dataset
+df = pd.read_csv('sign_mnist_train.csv')
+
+# Preprocessing
+X = df.drop('label', axis=1).values / 255.0
+y = df['label'].values
+
+# Select normal classes (exclude class 24)
+normal = X[y != 24]
+
+# Build autoencoder
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(128, activation='relu', input_shape=(784,)),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(784, activation='sigmoid')
+])
+
+# Compile
+model.compile(optimizer='adam', loss='mse')
+
+# Train
+model.fit(normal, normal, epochs=5)
+
+# Calculate threshold
+pred = model.predict(normal)
+error = np.mean((normal - pred)**2, axis=1)
+threshold = np.percentile(error, 95)
+
+# Detect anomalies
+pred = model.predict(X)
+error = np.mean((X - pred)**2, axis=1)
+
+anomalies = error > threshold
+
+print("Threshold:", threshold)
+print("Anomalies detected:", np.sum(anomalies))
+print("Reconstruction error:", error[:5])
